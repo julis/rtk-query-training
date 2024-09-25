@@ -28,6 +28,27 @@ const db = new sqlite3.Database('./tasks.db', (err) => {
 // Routes
 const apiRouter = express.Router();
 
+// Add this new route for searching tasks
+apiRouter.get('/tasks/search', (req, res) => {
+  const { query } = req.query;
+  if (!query) {
+    return res.status(400).json({ error: 'Search query is required' });
+  }
+
+  const searchQuery = `%${query}%`;
+  db.all(
+    'SELECT * FROM tasks WHERE title LIKE ? OR description LIKE ?',
+    [searchQuery, searchQuery],
+    (err, rows) => {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      res.json(rows);
+    }
+  );
+});
+
 // Get all tasks
 apiRouter.get('/tasks', (req, res) => {
   db.all('SELECT * FROM tasks', [], (err, rows) => {
